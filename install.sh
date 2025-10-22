@@ -6,6 +6,7 @@ core_only=false
 target_platform="x86"
 compile_num_cores=""
 cross_compile_command=""
+gcc_version=""
 python_version="3"
 
 if [[ -z "$TAPPAS_WORKSPACE" ]]; then
@@ -29,6 +30,17 @@ declare -A ARCH_TO_DPKG=(
   ["rockchip"]="amd64"
   ["rpi5"]="arm64"
   ["rpi"]="arm64"
+)
+#FIXME: target_platform env var passed is incorrect if aarch64 or rockchip, "arm" is the only valid value for RPI5
+#       Per install_hailo_gstreamer.sh, "--target-platform      Target platform, used for installing only
+#       required media and hef files [x86, arm, hailo15] (Default is $TARGET_PLATFORM)
+#       Not sure if rockchip is a valid value.
+declare -A ARCH_TO_GSTRM=(
+  ["x86"]="x86"
+  ["aarch64"]="arm"
+  ["rockchip"]="amd64"
+  ["rpi5"]="arm"
+  ["rpi"]="arm"
 )
 
 function print_usage() {
@@ -111,12 +123,12 @@ function python_venv_create_and_install() {
     source ${VENV_PATH}/$VENV_NAME/bin/activate
   fi
   # Install pip packages & Call the downloader script
-  pip3 install --upgrade pip 'setuptools<=66.0.0'
+  pip3 install --upgrade pip 'setuptools<=66.0.0' 'wheel==0.37.0'
   pip3 install -r $TAPPAS_WORKSPACE/core/requirements/requirements.txt
   pip3 install -r $TAPPAS_WORKSPACE/core/requirements/gstreamer_requirements.txt
   pip3 install -r $TAPPAS_WORKSPACE/downloader/requirements.txt
   # if rpi5 (core_only) is set dont download apps data (TAPPAS Core mode)
-  if [ "$core_only" = false ]; then
+  if [[ "$core_only" = false || "$target_platform" != "rpi5" ]]; then
     if [[ ${apps_to_set} ]]; then
       python3 $TAPPAS_WORKSPACE/downloader/main.py --apps-list $apps_to_set
     else
@@ -125,10 +137,23 @@ function python_venv_create_and_install() {
   fi
 }
 
+function check_hailort_installed() {
+  hailort_version=$(dpkg -l | awk '/^ii[[:space:]]+hailort[[:space:]]/ {print $3}')
+
+  if [ -n "$hailort_version" ]; then
+    echo "[info] HailoRT is installed!"
+    echo "[info] HailoRT version: $hailort_version"
+    return 0
+  fi  
+
+  echo "HailoRT is not installed. Please, follow our manual HailoRT installation guide."
+  exit 1
+}
+
+
 function install_hailo() {
-  if [ "$skip_hailort" = false ]; then
-    yes N | sudo dpkg -i ${TAPPAS_WORKSPACE}/hailort/hailort_*_${ARCH_TO_DPKG[$target_platform]}.deb
-  fi
+
+  check_hailort_installed
 
   if [ "$target_platform" != "x86" ]; then
     echo "Skipping run_app tool on non x86 target platform..."
@@ -146,6 +171,7 @@ function install_hailo() {
   mkdir -p $USER_SITE_DIR
   echo "$TAPPAS_WORKSPACE/core/hailo/python/" > "$USER_SITE_DIR/gsthailo.pth"
 
+  #FIXME: target_platform env var passed is never used 
   $TAPPAS_WORKSPACE/scripts/gstreamer/install_gstreamer.sh --target-platform $target_platform $cross_compile_command
 
   libgsthailo_version=$(ldd /usr/lib/$(uname -m)-linux-gnu/gstreamer-1.0/libgsthailo.so | grep -o 'libhailort.*' | awk '{print $1}')
@@ -153,7 +179,10 @@ function install_hailo() {
   libhailort_version=$(ls /usr/lib/libhailort.so -l)
   libhailort_version_num=${libhailort_version#*libhailort.so.}
 
-  ${TAPPAS_WORKSPACE}/scripts/gstreamer/install_hailo_gstreamer.sh --build-mode $GST_HAILO_BUILD_MODE --target-platform $target_platform $compile_num_cores $cross_compile_command
+  gstrm_target_platofmr=${ARCH_TO_GSTRM[$target_platform]}
+  
+  ${TAPPAS_WORKSPACE}/scripts/gstreamer/install_hailo_gstreamer.sh --build-mode $GST_HAILO_BUILD_MODE \
+  --target-platform $gstrm_target_platform $compile_num_cores $cross_compile_command
 
   # Install source files
   sudo mkdir -p /usr/include/hailo/tappas/sources
@@ -170,6 +199,20 @@ function install_hailo() {
 
 }
 
+function set_gcc_version(){
+  if [ "$target_platform" == "rpi" ] || [ "$target_platform" == "rockchip" ]; then
+    gcc_version=9
+  else
+    ubuntu_version=$(lsb_release -r | awk '{print $2}' | awk -F'.' '{print $1}')
+    if [ $ubuntu_version -eq 20 ]; then
+        gcc_version=9
+    fi  
+    if [ $ubuntu_version -eq 24 ]; then
+        gcc_version=15
+    fi  
+  fi  
+}
+
 function check_systems_requirements(){
   ./check_system_requirements.sh
   if [ "$?" != "0"  ]; then
@@ -179,7 +222,7 @@ function check_systems_requirements(){
 
 function verify_that_hailort_found_if_needed() {
   if [ "$target_platform" != "x86" ]; then
-    hailort_sources_dir="$TAPPAS_WORKSPACE/hailort/sources"
+    hailort_sources_dir="$TAPPAS_WORKSPACE/sources"
     if [ ! -d "$hailort_sources_dir" ]; then
       echo "HailoRT sources directory not found ($hailort_sources_dir), Please follow our manual installation guide"
       exit 1
@@ -272,6 +315,7 @@ function list_supported_apps(){
 
 function main() {
   uninstall
+  set_gcc_version
   check_systems_requirements
   verify_that_hailort_found_if_needed
   python_venv_create_and_install
