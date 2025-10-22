@@ -14,8 +14,8 @@ NO_LOG="none"
 ubuntu_version=$(lsb_release -r | awk '{print $2}' | awk -F'.' '{print $1}')
 if [ $ubuntu_version -eq 20 ]; then
     GCC_VERSION=9
-else
-    GCC_VERSION=12
+elif [ $ubuntu_version -eq 24 ]; then
+    GCC_VERSION=13
 fi
 
 no_cache=false
