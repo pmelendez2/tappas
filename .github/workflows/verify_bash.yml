@@ -30,7 +30,7 @@ jobs:
         with: 
           filters: |
             scripts:
-              - "**/*.sh'
+              - '**/*.sh'
 
       - name: Run shellcheck
         if: steps.changes.outputs.scripts == 'true'
