@@ -1,0 +1,39 @@
+name: Verify Bash scripts
+
+on:
+  # Run on pushes or PRs to main (or whatever your default branch is)
+  push:
+    branches: [master, ubuntu_25.10]
+  pull_request:
+    branches: [master, ubuntu_25.10]
+
+  # Optional: allow manual triggers from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # ----------------------------
+  # 1️⃣ Lint & syntax check
+  # ----------------------------
+  lint:
+    name: Lint & syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install shellcheck (bundled in the image, but explicit for clarity)
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      
+      - name: Find changed scripts
+        id: changes
+        uses: dorny/paths filter@v2
+        with: 
+          filters: |
+            scripts:
+              - "**/*.sh'
+
+      - name: Run shellcheck
+        if: steps.changes.outputs.scripts == 'true'
+        run: |
+          shellcheck $(git diff --name-only --diff-filter=AM | grep '\.sh$')
+
