@@ -1,0 +1,22 @@
+name: "CodeQL"
+on:
+  push:
+    branches: [ master, ubuntu_25.10 ]
+  pull_request:
+    branches: [ master, ubuntu_25.10 ]
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: bash
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3   
