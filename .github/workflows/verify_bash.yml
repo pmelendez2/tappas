@@ -1,39 +1,30 @@
-name: Verify Bash scripts
-
 on:
-  # Run on pushes or PRs to main (or whatever your default branch is)
   push:
     branches: [master, ubuntu_25.10]
+    paths: ['**/*.sh']
   pull_request:
     branches: [master, ubuntu_25.10]
-
-  # Optional: allow manual triggers from the Actions tab
-  workflow_dispatch:
+    paths: ['**/*.sh']
 
 jobs:
-  # ----------------------------
-  # 1️⃣ Lint & syntax check
-  # ----------------------------
-  lint:
-    name: Lint & syntax
+  conditional-run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      # Install shellcheck (bundled in the image, but explicit for clarity)
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-      
-      - name: Find changed scripts
-        id: changes
-        uses: dorny/paths-filter@v2
-        with: 
-          filters: |
-            scripts:
-              - '**/*.sh'
-
-      - name: Run shellcheck
-        if: steps.changes.outputs.scripts == 'true'
+      # Figure out if any .sh files were *modified*
+      - name: Detect modified *.sh files
+        id: check_mods
         run: |
-          shellcheck $(git diff --name-only --diff-filter=AM | grep '\.sh$')
+          echo "MODIFIED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.sh$' | grep -v '^#' | wc -l)" >> $GITHUB_ENV
 
+      # Skip the rest if no .sh files were modified
+      - name: Skip if nothing changed
+        if: ${{ env.MODIFIED == '0' }}
+        run: echo "No Bash scripts were modified – skipping job."
+
+      # Continue with your actual job only when MODIFIED > 0
+      - name: Run Bash lint
+        if: ${{ env.MODIFIED != '0' }}
+        run: shellcheck **/*.sh
