@@ -1,9 +1,0 @@
-[2025-10-22 16:27:28.583] [72062] [HailoRT] [info] [device.cpp:51] [Device] OS Version: Linux 6.17.0-1003-raspi #3-Ubuntu SMP PREEMPT_DYNAMIC Mon Sep 22 19:28:02 UTC 2025 aarch64
-[2025-10-22 16:27:28.589] [72062] [HailoRT] [info] [control.cpp:113] [control__parse_identify_results] firmware_version is: 4.23.0
-[2025-10-22 16:27:28.589] [72062] [HailoRT] [info] [control.cpp:113] [control__parse_identify_results] firmware_version is: 4.23.0
-[2025-10-22 16:30:58.770] [72162] [HailoRT] [info] [device.cpp:51] [Device] OS Version: Linux 6.17.0-1003-raspi #3-Ubuntu SMP PREEMPT_DYNAMIC Mon Sep 22 19:28:02 UTC 2025 aarch64
-[2025-10-22 16:30:58.770] [72162] [HailoRT] [info] [control.cpp:113] [control__parse_identify_results] firmware_version is: 4.23.0
-[2025-10-22 16:30:58.770] [72162] [HailoRT] [info] [control.cpp:113] [control__parse_identify_results] firmware_version is: 4.23.0
-[2025-10-22 17:33:31.735] [73766] [HailoRT] [info] [device.cpp:51] [Device] OS Version: Linux 6.17.0-1003-raspi #3-Ubuntu SMP PREEMPT_DYNAMIC Mon Sep 22 19:28:02 UTC 2025 aarch64
-[2025-10-22 17:33:31.735] [73766] [HailoRT] [info] [control.cpp:113] [control__parse_identify_results] firmware_version is: 4.23.0
-[2025-10-22 17:33:31.735] [73766] [HailoRT] [info] [control.cpp:113] [control__parse_identify_results] firmware_version is: 4.23.0
