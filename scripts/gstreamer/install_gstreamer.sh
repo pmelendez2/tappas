@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+set -xv
+
 ARCH_DIR=""
 INSTALLATION_DIR=/usr
 

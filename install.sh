@@ -6,7 +6,7 @@ core_only=false
 target_platform="x86"
 compile_num_cores=""
 cross_compile_command=""
-gcc_version=""
+gcc_version="14"
 python_version="3"
 
 if [[ -z "$TAPPAS_WORKSPACE" ]]; then
@@ -208,7 +208,7 @@ function set_gcc_version(){
         gcc_version=9
     fi  
     if [ $ubuntu_version -eq 24 ]; then
-        gcc_version=15
+        gcc_version=14
     fi  
   fi  
 }

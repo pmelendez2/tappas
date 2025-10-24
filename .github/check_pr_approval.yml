@@ -1,0 +1,21 @@
+name: Check Approval
+on: [pull_request, pull_request_review]
+
+jobs:
+  check-approver:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            const approved = reviews.some(review => 
+              review.user.login === 'pmelendez2' && review.state === 'APPROVED'
+            );
+            if (!approved) {
+              core.setFailed('PR must be approved by pmelendez2');
+            }   
