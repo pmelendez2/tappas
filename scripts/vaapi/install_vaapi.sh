@@ -15,7 +15,7 @@ ubuntu_version=$(lsb_release -r | awk '{print $2}' | awk -F'.' '{print $1}')
 if [ $ubuntu_version -eq 20 ]; then
     GCC_VERSION=9
 elif [ $ubuntu_version -eq 24 ]; then
-    GCC_VERSION=13
+    GCC_VERSION=14
 fi
 
 no_cache=false
